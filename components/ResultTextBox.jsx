@@ -1,7 +1,8 @@
 import { FiClipboard } from "react-icons/fi";
 import { LoadingText, RefineTextBox } from "@components/TextBox";
+import Toggle from "./Toggle";
 
-const ResultTextBox = ({ isLoading = false, text = "" }) => {
+const ResultTextBox = ({ isLoading = false, text = "", handleClick, mode, setMode }) => {
     const handleClipboard = () => {
         navigator.clipboard
             .writeText(text)
@@ -11,10 +12,22 @@ const ResultTextBox = ({ isLoading = false, text = "" }) => {
 
     return (
         <>
-            <h3 className='text-sm font-normal text-gray-darkest mr-10'>
+            <h3 className='text-sm font-normal text-gray-darkest'>
                 {isLoading ? <LoadingText /> : <RefineTextBox text={text} />}
             </h3>
-            {!isLoading && <FiClipboard className='absolute right-2 bottom-2 opacity-50' onClick={handleClipboard} />}
+            {!isLoading && (
+                <div className='absolute right-2 bottom-1 flex flex-row'>
+                    <span className='inline-block m-auto text-xs opacity-50 hover:opacity-100 transition-opacity duration-300 '>
+                        {mode ? "Summarized!" : "Summarize it!"}
+                    </span>
+
+                    <Toggle handleClick={handleClick} mode={mode} setMode={setMode} />
+                    <FiClipboard
+                        className=' m-auto opacity-50 hover:opacity-100  transition-opacity duration-300'
+                        onClick={handleClipboard}
+                    />
+                </div>
+            )}
         </>
     );
 };

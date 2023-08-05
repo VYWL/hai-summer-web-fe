@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { get_text_ocr_result } from "@hook";
+import { getTextOCRresult, getSummary } from "@hook";
 import UploadBox from "@components/UploadBox";
 import Header from "@components/Header";
 import LoadingBox from "@components/LoadingBox";
@@ -15,7 +15,11 @@ const App = () => {
     const [image, setImage] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [isLoading, setLoading] = useState(false);
+
+    const [result, setResult] = useState(null);
     const [context, setContext] = useState(null);
+    const [summary, setSummary] = useState(null);
+    const [mode, setMode] = useState(false);
 
     // File upload event handler
     const onFileUpload = event => {
@@ -25,6 +29,9 @@ const App = () => {
         setImageFile(file);
         setImage(blobURL);
         setContext(null);
+        setResult(null);
+        setSummary(null);
+        setMode(false);
     };
 
     const handleUploadButton = () => fileInputRef.current.click();
@@ -34,16 +41,46 @@ const App = () => {
         if (!imageFile) return;
 
         if (!isLoading) setLoading(true);
-        const ret = await get_text_ocr_result(imageFile);
+        const ret = await getTextOCRresult(imageFile);
 
         setLoading(false);
 
         if (ret.success) {
             const responseText = ret.data;
             setContext(responseText);
+            setResult(responseText);
         } else {
-            setContext(null);
+            setResult(null);
         }
+
+        setSummary(null);
+    };
+
+    const handleSummary = async mode => {
+        if (mode === true) {
+            if (summary) {
+                setResult(summary);
+
+                return;
+            }
+
+            // 없는 경우 -> 요청을 보내야 한다.
+            if (!isLoading) setLoading(true);
+            const ret = await getSummary(context);
+
+            setLoading(false);
+
+            if (ret.success) {
+                setSummary(ret.data);
+                setResult(ret.data);
+            } else {
+                setSummary(null);
+            }
+
+            return;
+        }
+
+        setResult(context);
     };
 
     // Screen & Background style
@@ -69,10 +106,16 @@ const App = () => {
                 </UploadBox>
 
                 <LoadingBox>
-                    {!isLoading && context === null ? (
+                    {!isLoading && result === null ? (
                         <DefaultImageBox text='요청을 보내주세요!' />
                     ) : (
-                        <ResultTextBox isLoading={isLoading} text={context} />
+                        <ResultTextBox
+                            isLoading={isLoading}
+                            text={result}
+                            handleClick={handleSummary}
+                            mode={mode}
+                            setMode={setMode}
+                        />
                     )}
                 </LoadingBox>
             </div>
